@@ -32,7 +32,7 @@ class TextExpander:
         self._worker = threading.Thread(target=self._process_queue, daemon=True)
         self._worker.start()
 
-        self._running = False
+        self._paused = False   # soft pause — listener thread never stops
         self._lock = threading.Lock()
 
     # ------------------------------------------------------------------ #
@@ -66,8 +66,8 @@ class TextExpander:
     # ------------------------------------------------------------------ #
 
     def _on_press(self, key):
-        # While we are expanding, ignore all keys so we don't pollute the buffer
-        if self._expanding:
+        # Ignore events while paused or mid-expansion
+        if self._paused or self._expanding:
             return
 
         with self._lock:
@@ -142,23 +142,28 @@ class TextExpander:
             self._expanding = False
 
     # ------------------------------------------------------------------ #
-    # Start / stop                                                         #
+    # Start / pause / resume                                               #
     # ------------------------------------------------------------------ #
 
     def start(self):
-        if self._running:
+        """Start the listener once. Never call stop() — use pause()/resume()."""
+        if self.listener is not None:
             return
-        self._running = True
         self.listener = keyboard.Listener(on_press=self._on_press)
         self.listener.start()
 
+    def pause(self):
+        self._paused = True
+        self.buffer = ""
+
+    def resume(self):
+        self._paused = False
+        self.buffer = ""
+
+    # kept for compatibility — GUI calls stop() on window close only
     def stop(self):
-        if not self._running:
-            return
-        self._running = False
-        if self.listener:
-            self.listener.stop()
+        self._paused = True
 
     @property
     def is_running(self):
-        return self._running
+        return not self._paused

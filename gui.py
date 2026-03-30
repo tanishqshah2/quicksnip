@@ -437,14 +437,14 @@ class App:
 
     def _toggle(self):
         if self.expander.is_running:
-            self.expander.stop()
+            self.expander.pause()
             self._dot.config(fg=AMBER)
             self._slbl.config(text="  Paused", fg=AMBER)
             self._stat_card.config(highlightbackground=AMBER)
             self._tog.set_text("▶  Resume Expander")
             self._tog.update_colors(C_RESUME, fg="#ffffff")
         else:
-            self.expander.start()
+            self.expander.resume()
             self._dot.config(fg=GREEN)
             self._slbl.config(text="  Active", fg=GREEN)
             self._stat_card.config(highlightbackground=GREEN)
